@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+
+<!--Converted with LaTeX2HTML 2012 (1.2)
+original version by:  Nikos Drakos, CBLU, University of Leeds
+* revised and updated by:  Marcus Hennecke, Ross Moore, Herb Swan
+* with significant contributions from:
+  Jens Lippmann, Marek Rouchal, Martin Wilck and others -->
+<HTML>
+<HEAD>
+<TITLE>Summer 2015 Research Goals and Ideas</TITLE>
+<META NAME="description" CONTENT="Summer 2015 Research Goals and Ideas">
+<META NAME="keywords" CONTENT="qualnotes">
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="global">
+
+<META NAME="Generator" CONTENT="LaTeX2HTML v2012">
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+
+<LINK REL="STYLESHEET" HREF="qualnotes.css">
+
+<LINK REL="next" HREF="node1.html">
+</HEAD>
+
+<BODY >
+<!--Navigation Panel-->
+<A NAME="tex2html2"
+  HREF="node1.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/next.png"></A> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/prev_g.png">   
+<BR>
+<B> Next:</B> <A NAME="tex2html3"
+  HREF="node1.html">About this document ...</A>
+<BR>
+<BR>
+<!--End of Navigation Panel-->
+
+<P>
+
+<H1 ALIGN=CENTER>Summer 2015 Research Goals and Ideas</H1>
+<P ALIGN=CENTER><STRONG>Josh Schiffman</STRONG>
+</P>
+<HR>
+
+<P>
+
+<OL>
+<LI><B>Check for bugs</B>
+
+<P>
+Why is the simulation terminated after approximately 68,000 generations?
+
+<P>
+</LI>
+<LI><B>``Discreteness" of fitness</B>
+
+<P>
+Use <!-- MATH
+ $\mathbb{R}$
+ -->
+ instead of <!-- MATH
+ $\mathbb{Z}$
+ -->
+; take a function of the Hamming distances between TFs and TFBS. Use <!-- MATH
+ $e^{-\alpha}$
+ -->
+ for matrix entries, where 
+ is the number of differences. 
+
+<P>
+</LI>
+<LI><B>Allow generation overlap</B>
+
+<P>
+<B>Strategy:</B> Currently at the start of every new generation all individuals in the previous generation die. To simulate overlapping generations, only a fraction of individuals are selected to die every generation (should this be proportional to fitness?). Note: Paul Thomas thinks that drops in fitness could be due to the current simulation never competing offspring against potentially more fit parents.  
+
+<P>
+</LI>
+<LI><B>Snowball Mechanism</B>
+
+<P>
+Incompatibility vs. Time is not an adequate measure of the Snowball effect. We are really interested in whether or not the number of possible DMI mutations go up quadratically with the number of changes. Therefore, we should look at the number of fixed mutants that cause death when placed in an ancestor as a function of the number of fixed mutations. This relationship should be exponential.
+
+<P>
+<B>Strategy:</B> (1) run simulation until population reaches maximum fitness and save as ``ancestral population." (2) Continue simulation for X generations and search for fixed mutations every generation. Place fixed mutations in (an) ancestor(s) and calculate fitness/incompatibility. (3) Plot ancestral incompatibility as a function of fixed mutations. 
+
+<P>
+</LI>
+<LI><B>Quantify the degree of constraint.</B> 
+
+<P>
+(1) nucleotide: the number of substitutions vs. the mutation rate (<I>i.e.</I> expected without selection). (2) network(G): Euclidean distance vs. expected under just mutation. 
+
+<P>
+</LI>
+<LI><B>Check if Incompatibility can be due to just sequence drift without rewiring.</B>
+
+<P>
+<B>Strategy:</B> If Incompatibility is due solely to sequence drift and not GRN rewiring, we would observe Incompatibility only when genome sequences are hybridized and not when GRNs are hybridized. Check if switching matrix entries does not cause Incompatibility in cases where switching sequences does.
+
+<P>
+</LI>
+<LI><B>Pleiotropy</B>
+
+<P>
+How does selection act (if at all) on pleiotropy; specifically, TFBS motif pleiotropy? <I>i.e.</I> are matching ``nucleotide'' slots shared across multiple regulatory regions? In a GRN if both 
+ and 
+ have positive elements, are these scores due to the same or different matches in the same TF/TFBS, significantly?  
+
+<P>
+<B>Strategy:</B> (1) mutate nucleotides, (2) record the GRN-level impact of each sequence change on each GRN entry (if a given mutation alters more than one matrix entry it is ``motif pleiotropic," and (3) find the covariance of changes between matrix elements to (4) determine if motif pleiotropy is under negative or positive selection.
+
+<P>
+</LI>
+<LI><B>DSD rate estimate and a critical migration value that entails speciation.</B>
+
+<P>
+<B>Strategy:</B> (1) Add a geographic component to the model. Individuals are assigned a location on a line or grid and their offspring migrate to other locations with a probability proportional to distance. Mates are also chosen with a probability proportional to distance. (2) Run simulation for many generation and plot Incompatibility vs. pairwise distance of all organisms in a population.
+
+<P>
+</LI>
+<LI><B>Extending the regulatory region length.</B>
+
+<P>
+Would we see more mutations of small effect?
+
+<P>
+</LI>
+<LI><B>Is modularity selected for?</B> 
+
+<P>
+See if ``modularity" goes up as a population size increases or down as selection decreases. 
+
+<P>
+</LI>
+<LI><B>Predict <I>in vivo</I> DSD rates.</B>
+</LI>
+</OL>
+
+<P>
+<BR><HR>
+<!--Table of Child-Links-->
+<A NAME="CHILD_LINKS"></A>
+
+<UL>
+<LI><A NAME="tex2html4"
+  HREF="node1.html">About this document ...</A>
+</UL>
+<!--End of Table of Child-Links-->
+<HR>
+<!--Navigation Panel-->
+<A NAME="tex2html2"
+  HREF="node1.html">
+<IMG WIDTH="37" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="next"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/next.png"></A> 
+<IMG WIDTH="26" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="up"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/up_g.png"> 
+<IMG WIDTH="63" HEIGHT="24" ALIGN="BOTTOM" BORDER="0" ALT="previous"
+ SRC="file:/usr/local/Cellar/latex2html/2012/icons/prev_g.png">   
+<BR>
+<B> Next:</B> <A NAME="tex2html3"
+  HREF="node1.html">About this document ...</A>
+<!--End of Navigation Panel-->
+<ADDRESS>
+Joshua Schiffman
+2015-05-21
+</ADDRESS>
+</BODY>
+</HTML>
