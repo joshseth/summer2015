@@ -5,22 +5,50 @@
 \begin{document}
 
 \begin{enumerate}
-  \item Pleiotropy
+  \item \textbf{Check for bugs}
 
-  \item ``Discreteness" of fitness
-    Use $\mathbb{R}$ instead of $\mathbb{Z}$; take a function of the Hamming distances between TFs and TFBS.
-  \item Snowball Mechanism
-    Incompatibility vs. Time is not an adequate measure of the Snowball effect. We are really interested in whether or not the number of possible DMI mutations go up quadratically with the number of changes. Therefore, we should look at the number of fixed mutants that cause death when placed in an ancestor as a function of the number of fixed mutations. This relationship should be exponential.  
-  \item Disentagle the influence of sequence drift vs.\ rewiring underlying Incompatibility
-  \item Allow generation overlap
-  \item Predict \emph{in vivo} DSD rates. 
-  \item DSD rate estimate and a critical migration value that entails speciation.
-  \item Check for bugs in the code including possible memory leaks. 
-    Why is the simulation terminated after approximatelt 68,000 generations?
-  \item Consider extending the regulatory region length. Would we see more mutations of small effect?
-  \item Quantify the degree of constraint. (1) nucleodtide: the number of substitutions vs. the mutation rate (\emph{i.e.} expected without selection). (2) network(G): Euclidean distance vs. expected under just mutation. 
-  \item Is modularity selected for? 
+    Why is the simulation terminated after approximately 68,000 generations?
+
+  \item \textbf{``Discreteness" of fitness}
+
+    Use $\mathbb{R}$ instead of $\mathbb{Z}$; take a function of the Hamming distances between TFs and TFBS. Can use a sigmoidal or exponential function of the Hamming distance to compute matrix entries. 
+
+
+  \item \textbf{Allow generation overlap}
+
+    \textbf{Strategy:} Currently at the start of every new generation all individuals in the previous generation die. To simulate overlapping generations, only a fraction of individuals are selected to die every generation (should this be proportional to fitness?). Note: Paul Thomas think that drops in fitness could be due to the current simulation never competing offspring against potentially more fit parents.  
+
+  \item \textbf{Snowball Mechanism}
+
+    Incompatibility vs. Time is not an adequate measure of the Snowball effect. We are really interested in whether or not the number of possible DMI mutations go up quadratically with the number of changes. Therefore, we should look at the number of fixed mutants that cause death when placed in an ancestor as a function of the number of fixed mutations. This relationship should be exponential.
+
+    \textbf{Strategy:} (1) run simulation until population reaches maximum fitness and save as ``ancestral population." (2) Continue simulation for X generations and search for fixed mutations every generation. Place fixed mutations in (an) ancestor(s) and calculate fitness/incompatibility. (3) Plot ancestral incompatibility as a function of fixed mutations. 
+
+  \item \textbf{Pleiotropy}
+
+    How does selection act (if at all) on pleiotropy; specifically, TFBS motif pleiotropy? \emph{i.e.} are matching ``nucleotide'' slots shared across multiple regulatory regions? In a GRN if both $M_{ij}$ and $M_{ik}$ have positive elements, are these scores due to the same or different matches in the same TF/TFBS, significantly?  
+
+    \textbf{Strategy:} (1) mutate nucleotides, (2) record the GRN-level impact of each sequence change on each GRN entry (if a given mutation alters more than one matrix entry it is ``motif pleiotropic," and (3) find the covariance of changes between matrix elements to (4) determine if motif pleiotropy is under negative or positive selection.
+
+  \item \textbf{Disentangle the influence of sequence drift vs.\ rewiring underlying Incompatibility}
+
+  \item \textbf{DSD rate estimate and a critical migration value that entails speciation.}
+
+    \textbf{Strategy:} (1) Add a geographic component to the model. Individuals are assigned a location on a line or grid and their offspring migrate to other locations with a probability proportional to distance. Mates are also chosen with a probability proportional to distance. (2) Run simulation for many generation and plot Incompatibility vs.\ pairwise distance of all organisms in a population.
+
+  \item \textbf{Quantify the degree of constraint.} 
+    
+    (1) nucleotide: the number of substitutions vs.\ the mutation rate (\emph{i.e.} expected without selection). (2) network(G): Euclidean distance vs.\ expected under just mutation. 
+
+  \item \textbf{Extending the regulatory region length.}
+    
+    Would we see more mutations of small effect?
+
+  \item \textbf{Is modularity selected for?} 
+
     See if ``modularity" goes up as a population size increases or down as selection decreases. 
+
+  \item \textbf{Predict \emph{in vivo} DSD rates.}
 \end{enumerate}
 
 
