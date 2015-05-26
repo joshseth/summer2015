@@ -32,6 +32,7 @@ double weight_rand (double *fitnesses) {
       }
       rnd -= fitnesses[i];
   }
+  return i;
 }
 
 /* vectors_dot_prod := dot product of vectors x and y of dimension size n. 
@@ -330,9 +331,9 @@ for (count = 0; count < 5; count ++){
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent2].allele[hap]; 
           }
           for (int nuc = 0; nuc < g; nuc++) {
-            int mut_reg1 = rand()%10000;
+            int mut_reg1 = rand()%100000;
             int mut_reg2 = rand()%4; 
-            int mut_pro1 = rand()%10000;
+            int mut_pro1 = rand()%100000;
             int mut_pro2 = rand()%4; 
             
             if (mut_reg1 == 1 && mut_reg2 == 0) {  
@@ -364,7 +365,7 @@ for (count = 0; count < 5; count ++){
 //      printf ("%d\t%d\n", lin.generation[0].organism[0].allele[hap].protein[nuc], lin.generation[gen].organism[org].allele[hap].protein[nuc] );
           }
 //      printf ("\n"); 
-            int mut_dir = rand()%1000;
+            int mut_dir = rand()%10000;
           //  int mut_dir2 = rand()%10000;  
           if (mut_dir == 1 && lin.generation[gen].organism[org].allele[hap].reg_direction == 1) {
             lin.generation[gen].organism[org].allele[hap].reg_direction = 0; 
@@ -432,7 +433,7 @@ for (count = 0; count < 5; count ++){
        double euc_dist = sqrt (vectors_dot_prod (lin.generation[gen].organism[org].phenotype, lin.generation[gen].organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, lin.generation[gen].organism[org].phenotype, 5) ) );
 //  printf ("norm = %f\n", euc_dist);
 
-       lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist), 1)));
+       lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist), 2)));
        if ( gen % 100 == 0 && org == 0 ){
        printf ("GENERATION %d fitness-%d = %f\n", gen, org, lin.generation[gen].organism[org].fitness);  
          int q, r;
