@@ -9,6 +9,8 @@
 
 
 /* g := length of proteins and regulatory regions.
+ * N := number of generations. 
+ * pop := population size. 
  */
 static const int g = 10;
 static const int N = 20000;
@@ -179,6 +181,10 @@ typedef struct {
 
 int  main () {
 
+  double meanfit = 0;
+  FILE *fit; 
+  fit = fopen ("fitness.dat", "w");
+
   time_t time;
   srand ((unsigned) (&time));
   /* "time_t" above ensures better random number generation since it uses time.
@@ -311,6 +317,7 @@ for (count = 0; count < 5; count ++){
   int hap; 
 
   for (gen = 1; gen < N; gen ++) {
+    meanfit = 0;
     double fitnesses[pop]; 
       for (org = 0; org < pop; org++) {
         fitnesses[org] = lin.generation[gen-1].organism[org].fitness;
@@ -436,6 +443,14 @@ for (count = 0; count < 5; count ++){
 
        lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist)/10, 2)));
        if ( gen % 100 == 0 && org == 0 ){
+      for (int i = 0; i < pop; i++)
+      {
+        meanfit += (lin.generation[gen].organism[i].fitness/pop);
+      
+      }
+      fprintf (fit, "%f\n,", meanfit);
+      
+    
        printf ("GENERATION %d fitness-%d = %f\n", gen, org, lin.generation[gen].organism[org].fitness);  
          int q, r;
           for (q = 0; q < 5; q++) {
@@ -456,23 +471,6 @@ for (count = 0; count < 5; count ++){
     }
   }
 
-  double meanfit = 0;
-  FILE *fit; 
-  fit = fopen ("fitness.dat", "w");
-  for (int dat = 0; dat < N; dat++)
-  {
-    if (dat % 10 == 0)
-    {
-      meanfit = 0;
-      for (int i = 0; i < pop; i++)
-      {
-        meanfit += (lin.generation[dat].organism[i].fitness)/pop;
-      
-      }
-      fprintf (fit, "%f\n,", meanfit);
-      
-    }
-  }
   fclose(fit);
 /*  FILE *f; 
  *  f = fopen ("long-run-lin1.dat", "wb"); 
