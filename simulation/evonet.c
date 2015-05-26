@@ -11,7 +11,8 @@
 /* g := length of proteins and regulatory regions.
  */
 static const int g = 10;
-static const int N = 30000;
+static const int N = 20000;
+static const int pop = 100;
 
 /* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
  * The random number generated below determines the probability an individual will be chosen to reproduce and is essential to simulate Natural Selection.
@@ -21,11 +22,11 @@ double weight_rand (double *fitnesses) {
 
  double sum_of_weight = 0;
  int i; 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < pop; i++) {
      sum_of_weight += fitnesses[i];
   }
     double rnd = fmod((double)rand()/((double)RAND_MAX), sum_of_weight);
-  for (i = 0; i < 100; i++) {
+  for (i = 0; i < pop; i++) {
     if (rnd < fitnesses[i]){
       return i;
       break;
@@ -148,7 +149,7 @@ typedef struct {
 
 typedef struct {
 
-  genome organism[100];
+  genome organism[pop];
 
 } population;
 
@@ -291,12 +292,12 @@ int  main () {
  // free(ans); 
   }
 
-for (int tst = 1; tst < 100; tst++) {
+for (int tst = 1; tst < pop; tst++) {
 lin.generation[0].organism[tst] = lin.generation[0].organism[0]; 
 }
 for (count = 0; count < 5; count ++){
   printf( "copy gene %d\n", count); 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < g; i++) {
     printf ("%d\t%d\n", lin.generation[0].organism[1].allele[count].regulator[i], lin.generation[0].organism[org].allele[count].protein[i] );
   }
 }
@@ -310,24 +311,24 @@ for (count = 0; count < 5; count ++){
   int hap; 
 
   for (gen = 1; gen < N; gen ++) {
-    double fitnesses[100]; 
-      for (org = 0; org < 100; org++) {
+    double fitnesses[pop]; 
+      for (org = 0; org < pop; org++) {
         fitnesses[org] = lin.generation[gen-1].organism[org].fitness;
       }
-      for (org = 0; org < 100; org++) {
+      for (org = 0; org < pop; org++) {
         
         int parent1 = weight_rand(fitnesses);
         int parent2 = weight_rand(fitnesses);
   //      printf ("organism %d has parent 1 = %d and parent 2 = %d\n" , org, parent1, parent2);     
         for (hap = 0; hap < 5; hap++){
-          if (org < 50)
+          if (org < (pop/2))
           {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
           }
-          if (org > 50 && (hap == 0 || hap == 2 || hap == 3)) {
+          if (org > (pop/2) && (hap == 0 || hap == 2 || hap == 3)) {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
         }
-          if (org > 50 && (hap == 1 || hap == 4)) {
+          if (org > (pop/2) && (hap == 1 || hap == 4)) {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent2].allele[hap]; 
           }
           for (int nuc = 0; nuc < g; nuc++) {
@@ -433,7 +434,7 @@ for (count = 0; count < 5; count ++){
        double euc_dist = sqrt (vectors_dot_prod (lin.generation[gen].organism[org].phenotype, lin.generation[gen].organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, lin.generation[gen].organism[org].phenotype, 5) ) );
 //  printf ("norm = %f\n", euc_dist);
 
-       lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist), 2)));
+       lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist)/10, 2)));
        if ( gen % 100 == 0 && org == 0 ){
        printf ("GENERATION %d fitness-%d = %f\n", gen, org, lin.generation[gen].organism[org].fitness);  
          int q, r;
@@ -463,9 +464,9 @@ for (count = 0; count < 5; count ++){
     if (dat % 10 == 0)
     {
       meanfit = 0;
-      for (int i = 0; i < 100; i++)
+      for (int i = 0; i < pop; i++)
       {
-        meanfit += (lin.generation[dat].organism[i].fitness)/100;
+        meanfit += (lin.generation[dat].organism[i].fitness)/pop;
       
       }
       fprintf (fit, "%f\n,", meanfit);
