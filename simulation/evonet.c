@@ -320,20 +320,20 @@ for (count = 0; count < 5; count ++){
         int parent2 = weight_rand(fitnesses);
   //      printf ("organism %d has parent 1 = %d and parent 2 = %d\n" , org, parent1, parent2);     
         for (hap = 0; hap < 5; hap++){
-      /*    if (org < 10)
+          if (org < 50)
           {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
-          }*/
-          if (/*org > 10 && */(hap == 0 || hap == 2 || hap == 3)) {
+          }
+          if (org > 50 && (hap == 0 || hap == 2 || hap == 3)) {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
         }
-          if (/*org > 10 && */(hap == 1 || hap == 4)) {
+          if (org > 50 && (hap == 1 || hap == 4)) {
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent2].allele[hap]; 
           }
           for (int nuc = 0; nuc < g; nuc++) {
-            int mut_reg1 = rand()%100000;
+            int mut_reg1 = rand()%10000;
             int mut_reg2 = rand()%4; 
-            int mut_pro1 = rand()%100000;
+            int mut_pro1 = rand()%10000;
             int mut_pro2 = rand()%4; 
             
             if (mut_reg1 == 1 && mut_reg2 == 0) {  
@@ -455,13 +455,21 @@ for (count = 0; count < 5; count ++){
     }
   }
 
+  double meanfit = 0;
   FILE *fit; 
   fit = fopen ("fitness.dat", "w");
   for (int dat = 0; dat < N; dat++)
   {
-    if (dat % 100 == 0)
+    if (dat % 10 == 0)
     {
-      fprintf (fit, "%f\n,", lin.generation[dat].organism[0].fitness);
+      meanfit = 0;
+      for (int i = 0; i < 100; i++)
+      {
+        meanfit += (lin.generation[dat].organism[i].fitness)/100;
+      
+      }
+      fprintf (fit, "%f\n,", meanfit);
+      
     }
   }
   fclose(fit);
