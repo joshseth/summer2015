@@ -12,8 +12,8 @@
  * N := number of generations. 
  * pop := population size. 
  */
-static const int g = 40;
-static const int N = 20000;
+static const int g = 30;
+static const int N = 80000;
 static const int pop = 100;
 
 /* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
@@ -57,32 +57,32 @@ double vectors_dot_prod(double *x, double *y, int n)
  * Arguments: 5 x 5 matrix, a vector, and row and column lengths. 
  */
 
+double mult_result[5] = {0, 0, 0, 0, 0};
 double* matrix_vector_mult(double mat[5][5], double *vec, int rows, int cols)
 { // in matrix form: result = mat * vec;
 	int i;
-	double *result = (double*) malloc (cols* sizeof (double));
 		for (i = 0; i < rows; i++) {
-        	result[i] = vectors_dot_prod(mat[i], vec, cols);
+        	mult_result[i] = vectors_dot_prod(mat[i], vec, cols);
 		}
-	return result; 
+	return mult_result;
 } 
 
 /* vec_add := vector addition and squashing. 
  * Adds vectors, HOWEVER, this also constrains the value of any element to be between [0, 20].
  */
 
-double* vec_add (double *vec1, double *vec2) {
-  double *result = (double*) malloc (5 * sizeof(double));
+double add_result[5] = {0, 0, 0, 0, 0};
+double* vec_add (double vec1[5], double vec2[5]) {
     for (int i = 0; i < 5; i++) {
-    result[i] = vec1[i] + vec2[i];
-      if (result[i] < 0) {
-        result[i] = 0; 
+    add_result[i] = vec1[i] + vec2[i];
+      if (add_result[i] < 0) {
+        add_result[i] = 0; 
       }
-      if (result[i] > 20) {
-        result[i] = 20; 
-      }
+      if (add_result[i] > 1) {
+        add_result[i] = 1; 
+      } 
     }
-  return result; 
+  return add_result;
 }
 
 /* mat_power := takes a 5x5 matrix, vector, and row/col lentgh arguments. 
@@ -90,11 +90,17 @@ double* vec_add (double *vec1, double *vec2) {
  */
 
 double* mat_power(double mat[5][5], double *vec, int rows, int cols, int power) {
-  if (power == 0) {
+  if (power == 0)
+  {
     return vec;
-  } else {
-    double *solution =  matrix_vector_mult(mat, vec, rows, cols); 
-    double *solution2 = vec_add (mat_power (mat, solution, rows, cols, (power - 1)), solution) ;
+  } 
+  else
+  {
+    vec =  vec_add(vec, matrix_vector_mult(mat, vec, rows, cols)); 
+    double *solution2 = mat_power (mat, vec, rows, cols, (power - 1));
+    //free (solution);
+    //free (solution2);
+    //free(solution2);
    /* for (int i = 0; i < 5; i++) {
       solution2[i] = solution2[i] + solution[i];
         if (solution2[i] < 0) {
@@ -104,11 +110,20 @@ double* mat_power(double mat[5][5], double *vec, int rows, int cols, int power) 
           solution2[i] = 10; 
         } 
     }*/
-    return solution2; 
+    return vec; 
   }
 
 }
 
+////////
+
+////////
+
+/*double* mat_power2(double mat[5][5], double *vec, int rows, int cols, int power)
+{
+
+}
+*/
 /* gene := a "gene" struct contains 2 arrays denotes "regulator" and "protein",
  * and integers for protein and regulator directions (the influence these exert when interacting in a network.
  *
@@ -123,7 +138,7 @@ typedef struct {
 	int regulator[g];
 	int protein[g];
 	int reg_direction;
-        int pro_direction;
+  int pro_direction;
 
 	} gene;
 
@@ -199,7 +214,7 @@ int  main () {
   int count;
 
   double y[5] = {1, 1, 1, 1, 1};  
-  double optimal_phenotype[5] = {2, 1, 2, 0, 1}; 
+  double optimal_phenotype[5] = {1, 1, 1, 1, 1}; 
   
   /* y[5] is a 5 dimensional initial vector.
    * Interpreted as the "environment."
@@ -237,13 +252,13 @@ int  main () {
     for (j = 0; j < 5; j++) {
       for (k = 0; k < g; k++) {
         if (lin.generation[0].organism[org].allele[h].regulator[k] == lin.generation[0].organism[org].allele[j].protein[k]) {
-         lin.generation[0].organism[org].GRN[h][j] = (lin.generation[0].organism[org].GRN[h][j]) + 0.5;
+         lin.generation[0].organism[org].GRN[h][j] = (lin.generation[0].organism[org].GRN[h][j]) + 0.01;
         /*  if (lin.generation[0].organism[org].allele[h].reg_direction == 1) {
             lin.generation[0].organism[org].GRN[h][j] = (lin.generation[0].organism[org].GRN[h][j] * (-1));
             }
          */ }
       }
-      if (lin.generation[0].organism[org].allele[h].reg_direction == 1) {
+      if (lin.generation[0].organism[org].allele[h].reg_direction == lin.generation[0].organism[org].allele[j].pro_direction) {
          lin.generation[0].organism[org].GRN[h][j] = (lin.generation[0].organism[org].GRN[h][j] * (-1)); 
       }
     }
@@ -253,7 +268,7 @@ int  main () {
   {
     for (j = 0; j < 5; j++)
     {
-     // lin.generation[0].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[0].organism[org].GRN[h][j]))/5, -1);
+   //   lin.generation[0].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[0].organism[org].GRN[h][j]))/5, -1);
 
       if (lin.generation[0].organism[org].allele[h].reg_direction == 1)
       {
@@ -283,7 +298,7 @@ int  main () {
 */
 
   printf("\nMatrix iteration:\n");
-  lin.generation[0].organism[org].phenotype = mat_power(lin.generation[0].organism[org].GRN, y, 5, 5, 100);
+  lin.generation[0].organism[org].phenotype = mat_power(lin.generation[0].organism[org].GRN, y, 5, 5, 10);
   for (i = 0; i < 5; i++) {
     printf ("%f\n", lin.generation[0].organism[org].phenotype[i]);
   }
@@ -339,9 +354,9 @@ for (count = 0; count < 5; count ++){
             lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent2].allele[hap]; 
           }
           for (int nuc = 0; nuc < g; nuc++) {
-            int mut_reg1 = rand()%100000;
+            int mut_reg1 = rand()%1000000;
             int mut_reg2 = rand()%4; 
-            int mut_pro1 = rand()%100000;
+            int mut_pro1 = rand()%1000000;
             int mut_pro2 = rand()%4; 
             
             if (mut_reg1 == 1 && mut_reg2 == 0) {  
@@ -373,21 +388,21 @@ for (count = 0; count < 5; count ++){
 //      printf ("%d\t%d\n", lin.generation[0].organism[0].allele[hap].protein[nuc], lin.generation[gen].organism[org].allele[hap].protein[nuc] );
           }
 //      printf ("\n"); 
-            int mut_dir = rand()%100000;
-          //  int mut_dir2 = rand()%10000;  
+            int mut_dir  = rand()%1000000;
+            int mut_dir2 = rand()%1000000;  
           if (mut_dir == 1 && lin.generation[gen].organism[org].allele[hap].reg_direction == 1) {
             lin.generation[gen].organism[org].allele[hap].reg_direction = 0; 
           }
           if (mut_dir == 1 && lin.generation[gen].organism[org].allele[hap].reg_direction == 0) {
             lin.generation[gen].organism[org].allele[hap].reg_direction = 1;
           }
-      /*    if (mut_dir2 == 1 && lin.generation[gen].organism[org].allele[hap].pro_direction %2 == 1) {
-            lin.generation[gen].organism[org].allele[hap].reg_direction = 0;
+          if (mut_dir2 == 1 && lin.generation[gen].organism[org].allele[hap].pro_direction %2 == 1) {
+            lin.generation[gen].organism[org].allele[hap].pro_direction = 0;
           }
           if (mut_dir2 == 1 && lin.generation[gen].organism[org].allele[hap].pro_direction %2 == 0) {
-            lin.generation[gen].organism[org].allele[hap].reg_direction = 1;
+            lin.generation[gen].organism[org].allele[hap].pro_direction = 1;
           }
-    */
+   
 
         }
 
@@ -425,8 +440,8 @@ for (count = 0; count < 5; count ++){
   {
     for (j = 0; j < 5; j++)
     {
-    //    lin.generation[gen].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[gen].organism[org].GRN[h][j]))/5, -1);
-      if (lin.generation[gen].organism[org].allele[h].reg_direction == 0)
+     //   lin.generation[gen].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[gen].organism[org].GRN[h][j]))/5, -1);
+      if (lin.generation[gen].organism[org].allele[h].reg_direction == lin.generation[gen].organism[org].allele[j].pro_direction)
       {
         lin.generation[gen].organism[org].GRN[h][j] = (lin.generation[gen].organism[org].GRN[h][j] * (-1));
       }
@@ -436,21 +451,22 @@ for (count = 0; count < 5; count ++){
 
   /* don't need pmat now that matrix_vec_mult has mat[5][5] instead **mat now */
   //       double *pmat[] = {lin.generation[gen].organism[org].GRN[0], lin.generation[gen].organism[org].GRN[1], lin.generation[gen].organism[org].GRN[2], lin.generation[gen].organism[org].GRN[3], lin.generation[gen].organism[org].GRN[4]};
-       lin.generation[gen].organism[org].phenotype = mat_power (lin.generation[gen].organism[org].GRN, y, 5, 5, 100);  
+         lin.generation[gen].organism[org].phenotype = mat_power (lin.generation[gen].organism[org].GRN, y, 5, 5, 10); 
 
        double euc_dist = sqrt (vectors_dot_prod (lin.generation[gen].organism[org].phenotype, lin.generation[gen].organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, lin.generation[gen].organism[org].phenotype, 5) ) );
 //  printf ("norm = %f\n", euc_dist);
 
        lin.generation[gen].organism[org].fitness = exp (((-1) * pow ((euc_dist), 2)));
+       //free(lin.generation[gen].organism[org].phenotype);
       if ( gen % 1000 == 0 && org == 0 ){
        printf ("GENERATION %d fitness-%d = %f\n", gen, org, lin.generation[gen].organism[org].fitness);  
-         //int q, r;
-         // for (q = 0; q < 5; q++) {
-         //   for (r = 0; r < 5; r++) {
-         //     printf ("%f ", lin.generation[gen].organism[org].GRN[q][r]);
-         //   }
-         //   printf ("\n");
-         // }
+         int q, r;
+          for (q = 0; q < 5; q++) {
+            for (r = 0; r < 5; r++) {
+              printf ("%f ", lin.generation[gen].organism[org].GRN[q][r]);
+            }
+            printf ("\n");
+          }
    /*   for (hap = 0; hap < 5; hap++) {
         printf ("Gene %d\n", hap); 
         for (int i = 0; i < 10; i++) {
@@ -469,7 +485,7 @@ for (count = 0; count < 5; count ++){
          }
      }
 
-    }
+      }
   }
 
   fclose(fit);
