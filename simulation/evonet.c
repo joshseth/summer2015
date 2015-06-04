@@ -13,30 +13,80 @@
  * pop := population size. 
  */
 static const int g = 30;
-static const int N = 1000000;
+static const int N = 500000;
 static const int pop = 100;
-
+static const int mutate = 50000;
 /* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
  * The random number generated below determines the probability an individual will be chosen to reproduce and is essential to simulate Natural Selection.
  */
 
-double weight_rand (double *fitnesses) {
+
+/* double weight_rand (double *fitnesses) {
+
+ double sum_of_weight = 0;
+ double cum_fitness[pop];
+ int i; 
+  for (int i = 0; i < pop; i++) {
+     sum_of_weight += fitnesses[i];
+     cum_fitness[i] = sum_of_weight;
+  }
+    double rnd = ((double)rand()/(double)RAND_MAX)*sum_of_weight;
+  for (i = 0; i < pop; i++) {
+    if (rnd <= cum_fitness[i])
+    {
+      return i;
+      break;
+    }
+      rnd -= cum_fitness[i];
+  }
+  return i;
+}
+*/
+
+double weight_rand (double *fitnesses)
+{
+  double rnd = rand()/(double) RAND_MAX;
+  double totalfitness = 0;
+  double probability[pop];
+  double weights;
+  int survivor;
+  for (int i = 0; i < pop; i++)
+  {
+    totalfitness += fitnesses[i]; 
+  }
+  for (int j = 0; j < pop; j++)
+  {
+    probability[j] = fitnesses[j]/totalfitness; 
+  }
+  for (int k = 0; k < pop; k++)
+  {
+    weights += probability[k];
+    if (rnd < weights)
+    {
+      survivor = k;
+      break;
+    }
+  }
+  return survivor;
+}
+
+/*double geography_rand (double *fitnesses, int *geog) {
 
  double sum_of_weight = 0;
  int i; 
   for (int i = 0; i < pop; i++) {
-     sum_of_weight += fitnesses[i];
+     sum_of_weight += (fitnesses[i]*exp(-geog[i]/10));
   }
     double rnd = fmod((double)rand()/((double)RAND_MAX), sum_of_weight);
   for (i = 0; i < pop; i++) {
-    if (rnd < fitnesses[i]){
+    if (rnd < (fitnesses[i]*exp(-geog[i/10]))){
       return i;
       break;
       }
-      rnd -= fitnesses[i];
+      rnd -= (fitnesses[i]*exp(-geog[i]/10));
   }
   return i;
-}
+}*/
 
 /* vectors_dot_prod := dot product of vectors x and y of dimension size n. 
  */
@@ -76,7 +126,7 @@ double* vec_add (double vec1[5], double vec2[5]) {
     for (int i = 0; i < 5; i++) {
     add_result[i] = vec1[i] + vec2[i];
       if (add_result[i] < 0) {
-        add_result[i] = 0; 
+       add_result[i] = 0; 
       }
       if (add_result[i] > 1) {
         add_result[i] = 1; 
@@ -98,9 +148,6 @@ double* mat_power(double mat[5][5], double *vec, int rows, int cols, int power) 
   {
     vec =  vec_add(vec, matrix_vector_mult(mat, vec, rows, cols)); 
     double *solution2 = mat_power (mat, vec, rows, cols, (power - 1));
-    //free (solution);
-    //free (solution2);
-    //free(solution2);
    /* for (int i = 0; i < 5; i++) {
       solution2[i] = solution2[i] + solution[i];
         if (solution2[i] < 0) {
@@ -156,6 +203,7 @@ typedef struct {
       double GRN[5][5];
       double *phenotype;
       double fitness;
+      int location;
 
 	} genome;
 
@@ -200,24 +248,29 @@ int  main () {
   FILE *fit; 
   fit = fopen ("fitness.dat", "w");
 
+  FILE *flocation;
+  flocation = fopen("location.dat", "w");
+
   time_t time;
   srand ((unsigned) (&time));
   /* "time_t" above ensures better random number generation since it uses time.
    */
 
-  population currpop;
-  population prevpop;
-  //lineage lin;
-  //lin.generation = (population*) malloc (N * sizeof(population));
+  lineage lin;
+  lin.generation = (population*) malloc (N * sizeof(population));
   /* Assigning a lineage struct to to "lin"
    * lin.generation is an array of 1,000,000 populations. 
    */
 
   int count;
 
-  double y[5] = {0.1, 0.01, 0.5, 0.8, 0.03};  
-  double optimal_phenotype[5] = {0.01, 0.2, 0.02, 0.5, 0.9}; 
-  
+   double y[5]; // = {1, 1, 1, 1, 1};  
+  double optimal_phenotype[5]; // = {2, 2, 2, 2, 2}; 
+  for (int ph = 0; ph < 5; ph++)
+  {
+    y[ph] = (rand()/(double) RAND_MAX);
+    optimal_phenotype[ph] = (rand()/(double) RAND_MAX);
+  }
   /* y[5] is a 5 dimensional initial vector.
    * Interpreted as the "environment."
    */
@@ -226,13 +279,12 @@ int  main () {
    * All individuals in this generation are identical and random.
    */
 
-  int org;
-  for (org = 0; org < 1; org++) { 
+    lin.generation[0].organism[0].location = 10;   
 
     for (count = 0; count < 5; count++) {
 
-      currpop.organism[org].allele[count].reg_direction = rand()%2;
-      currpop.organism[org].allele[count].pro_direction = rand()%2;  
+      lin.generation[0].organism[0].allele[count].reg_direction = rand()%2;
+      lin.generation[0].organism[0].allele[count].pro_direction = rand()%2;  
 
       int i;
       int p_rand[g];
@@ -242,9 +294,9 @@ int  main () {
       for (i = 0; i < g; i++) {
       p_rand[i] = rand()%4;
       r_rand[i] = rand()%4;
-      currpop.organism[org].allele[count].regulator[i] = r_rand[i];
-      currpop.organism[org].allele[count].protein[i] = p_rand[i];	
-      printf ("%d\t%d\n", currpop.organism[org].allele[count].regulator[i], currpop.organism[org].allele[count].protein[i] );
+      lin.generation[0].organism[0].allele[count].regulator[i] = r_rand[i];
+      lin.generation[0].organism[0].allele[count].protein[i] = p_rand[i];	
+      printf ("%d\t%d\n", lin.generation[0].organism[0].allele[count].regulator[i], lin.generation[0].organism[0].allele[count].protein[i] );
       }
   }
   int h;
@@ -253,15 +305,15 @@ int  main () {
   for (h = 0; h < 5; h++) {
     for (j = 0; j < 5; j++) {
       for (k = 0; k < g; k++) {
-        if (currpop.organism[org].allele[h].regulator[k] == currpop.organism[org].allele[j].protein[k]) {
-         currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j]) + 0.005;
-        /*  if (currpop.organism[org].allele[h].reg_direction == 1) {
-            currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1));
+        if (lin.generation[0].organism[0].allele[h].regulator[k] == lin.generation[0].organism[0].allele[j].protein[k]) {
+         lin.generation[0].organism[0].GRN[h][j] = (lin.generation[0].organism[0].GRN[h][j]) + 1;
+        /*  if (lin.generation[0].organism[org].allele[h].reg_direction == 1) {
+            lin.generation[0].organism[org].GRN[h][j] = (lin.generation[0].organism[org].GRN[h][j] * (-1));
             }
          */ }
       }
-      if (currpop.organism[org].allele[h].reg_direction == currpop.organism[org].allele[j].pro_direction) {
-         currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1)); 
+      if (lin.generation[0].organism[0].allele[h].reg_direction == lin.generation[0].organism[0].allele[j].pro_direction) {
+         lin.generation[0].organism[0].GRN[h][j] = (lin.generation[0].organism[0].GRN[h][j] * (-1)); 
       }
     }
 	}
@@ -270,11 +322,11 @@ int  main () {
   {
     for (j = 0; j < 5; j++)
     {
-   //   currpop.organism[org].GRN[h][j] = pow(0.5 + (exp(6 - currpop.organism[org].GRN[h][j]))/5, -1);
+    //  lin.generation[0].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[0].organism[org].GRN[h][j]))/5, -1);
 
-      if (currpop.organism[org].allele[h].reg_direction == 1)
+      if (lin.generation[0].organism[0].allele[h].reg_direction == 1)
       {
-        currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1)); 
+        lin.generation[0].organism[0].GRN[h][j] = (lin.generation[0].organism[0].GRN[h][j] * (-1)); 
       }
     }
   }
@@ -282,13 +334,13 @@ int  main () {
   int q, r; 
   for (q = 0; q < 5; q++) {
     for (r = 0; r < 5; r++) {
-    printf ("%f ", currpop.organism[org].GRN[q][r]);
+    printf ("%f ", lin.generation[0].organism[0].GRN[q][r]);
     }
   printf ("\n"); 
   }
 
 
- // double *Mat[] = {currpop.organism[org].GRN[0], currpop.organism[org].GRN[1], currpop.organism[org].GRN[2], currpop.organism[org].GRN[3], currpop.organism[org].GRN[4]};
+ // double *Mat[] = {lin.generation[0].organism[org].GRN[0], lin.generation[0].organism[org].GRN[1], lin.generation[0].organism[org].GRN[2], lin.generation[0].organism[org].GRN[3], lin.generation[0].organism[org].GRN[4]};
 
 
   int i; 
@@ -300,28 +352,28 @@ int  main () {
 */
 
   printf("\nMatrix iteration:\n");
-  currpop.organism[org].phenotype = mat_power(currpop.organism[org].GRN, y, 5, 5, 10);
+  lin.generation[0].organism[0].phenotype = mat_power(lin.generation[0].organism[0].GRN, y, 5, 5, 10);
   for (i = 0; i < 5; i++) {
-    printf ("%f\n", currpop.organism[org].phenotype[i]);
+    printf ("%f\n", lin.generation[0].organism[0].phenotype[i]);
   }
 
-  double euc_dist = sqrt (vectors_dot_prod (currpop.organism[org].phenotype, currpop.organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, currpop.organism[org].phenotype, 5) ) ); 
+  double euc_dist = sqrt (vectors_dot_prod (lin.generation[0].organism[0].phenotype, lin.generation[0].organism[0].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, lin.generation[0].organism[0].phenotype, 5) ) ); 
   printf ("norm = %f\n", euc_dist); 
   
-  currpop.organism[org].fitness = exp ((-1) * pow(euc_dist,2));
+  lin.generation[0].organism[0].fitness = exp ((-1) * (pow(euc_dist, 2)));
 
-  printf ("fitness-%d = %f\n", org, currpop.organism[org].fitness);    
+  printf ("fitness-%d = %f\n", 0, lin.generation[0].organism[0].fitness);    
 
  // free(ans); 
-  }
+  
 
 for (int tst = 1; tst < pop; tst++) {
-currpop.organism[tst] = currpop.organism[0]; 
+lin.generation[0].organism[tst] = lin.generation[0].organism[0];
 }
 for (count = 0; count < 5; count ++){
   printf( "copy gene %d\n", count); 
   for (int i = 0; i < g; i++) {
-    printf ("%d\t%d\n", currpop.organism[1].allele[count].regulator[i], currpop.organism[org].allele[count].protein[i] );
+    printf ("%d\t%d\n", lin.generation[0].organism[1].allele[count].regulator[i], lin.generation[0].organism[0].allele[count].protein[i] );
   }
 }
 
@@ -334,82 +386,120 @@ for (count = 0; count < 5; count ++){
   int hap; 
 
   for (gen = 1; gen < N; gen ++) {
-    prevpop = currpop;
-    memset(&currpop, 0, sizeof(population)); 
-  
-    meanfit = 0;
+     
+    int org;
     double fitnesses[pop]; 
       for (org = 0; org < pop; org++) {
-        fitnesses[org] = prevpop.organism[org].fitness;
+        fitnesses[org] = lin.generation[gen-1].organism[org].fitness;
+       // printf ("org %d fitness - %f\n ", org, fitnesses[org]);
       }
       for (org = 0; org < pop; org++) {
         
         int parent1 = weight_rand(fitnesses);
-        int parent2 = weight_rand(fitnesses);
+        //printf("gen-%d  org-%d parent-%d\n", gen, org, parent1);
+     //   int geog[pop];
+       //   for (int loc = 0; loc < pop; loc++)
+       //   {
+       //     geog[loc] = abs(lin.generation[gen-1].organism[parent1].location - lin.generation[gen-1].organism[loc].location);
+        //  }
+        
+     //   int parent2 = geography_rand(fitnesses, geog);  
+      int parent2 = weight_rand(fitnesses);
   //      printf ("organism %d has parent 1 = %d and parent 2 = %d\n" , org, parent1, parent2);     
         for (hap = 0; hap < 5; hap++){
-          if (org < (pop/2))
-          {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
-          }
-          if (org > (pop/2) && (hap == 0 || hap == 2 || hap == 3)) {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
+       //   if (org < (pop/2))
+       //   {
+       //     lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
+       //   }
+          if (/*org > (pop/2) && */(hap == 0 || hap == 2 || hap == 3)) {
+            lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent1].allele[hap]; 
         }
-          if (org > (pop/2) && (hap == 1 || hap == 4)) {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent2].allele[hap]; 
+          if (/*org > (pop/2) && */ (hap == 1 || hap == 4)) {
+            lin.generation[gen].organism[org].allele[hap] = lin.generation[gen-1].organism[parent2].allele[hap]; 
           }
+          
           for (int nuc = 0; nuc < g; nuc++) {
-            int mut_reg1 = rand()%100000;
+            int mut_reg1 = rand()%mutate;
             int mut_reg2 = rand()%4; 
-            int mut_pro1 = rand()%100000;
+            int mut_pro1 = rand()%mutate;
             int mut_pro2 = rand()%4; 
             
             if (mut_reg1 == 1 && mut_reg2 == 0) {  
-              currpop.organism[org].allele[hap].regulator[nuc] = 0; 
+              lin.generation[gen].organism[org].allele[hap].regulator[nuc] = 0; 
             } 
             if (mut_reg1 == 1 && mut_reg2 == 1) {
-              currpop.organism[org].allele[hap].regulator[nuc] = 1; 
+              lin.generation[gen].organism[org].allele[hap].regulator[nuc] = 1; 
             }
             if (mut_reg1 == 1 && mut_reg2 == 2) {
-              currpop.organism[org].allele[hap].regulator[nuc] = 2; 
+              lin.generation[gen].organism[org].allele[hap].regulator[nuc] = 2; 
             }
             if (mut_reg1 == 1 && mut_reg2 == 3) {
-              currpop.organism[org].allele[hap].regulator[nuc] = 3;
+              lin.generation[gen].organism[org].allele[hap].regulator[nuc] = 3;
             }
 
             if (mut_pro1 == 1 && mut_pro2 == 0) {
-              currpop.organism[org].allele[hap].protein[nuc] = 0; 
+              lin.generation[gen].organism[org].allele[hap].protein[nuc] = 0; 
             }
             if (mut_pro1 == 1 && mut_pro2 == 1) {
-              currpop.organism[org].allele[hap].protein[nuc] = 1; 
+              lin.generation[gen].organism[org].allele[hap].protein[nuc] = 1; 
             }
             if (mut_pro1 == 1 && mut_pro2 == 2) {
-              currpop.organism[org].allele[hap].protein[nuc] = 2;
+              lin.generation[gen].organism[org].allele[hap].protein[nuc] = 2;
             }
             if (mut_pro1 == 1 && mut_pro2 == 3) {
-              currpop.organism[org].allele[hap].protein[nuc] = 3;
+              lin.generation[gen].organism[org].allele[hap].protein[nuc] = 3;
             }
 
-//      printf ("%d\t%d\n", currpop.organism[0].allele[hap].protein[nuc], currpop.organism[org].allele[hap].protein[nuc] );
+//      printf ("%d\t%d\n", lin.generation[gen].organism[0].allele[hap].protein[nuc], lin.generation[gen].organism[org].allele[hap].protein[nuc] );
           }
 //      printf ("\n"); 
-            int mut_dir  = rand()%100000;
-            int mut_dir2 = rand()%100000;  
-          if (mut_dir == 1 && currpop.organism[org].allele[hap].reg_direction == 1) {
-            currpop.organism[org].allele[hap].reg_direction = 0; 
+            int mut_dir  = rand()%mutate;
+            int mut_dir2 = rand()%mutate;  
+          if (mut_dir == 1 && lin.generation[gen].organism[org].allele[hap].reg_direction == 1) {
+            lin.generation[gen].organism[org].allele[hap].reg_direction = 0; 
           }
-          if (mut_dir == 1 && currpop.organism[org].allele[hap].reg_direction == 0) {
-            currpop.organism[org].allele[hap].reg_direction = 1;
+          if (mut_dir == 1 && lin.generation[gen].organism[org].allele[hap].reg_direction == 0) {
+            lin.generation[gen].organism[org].allele[hap].reg_direction = 1;
           }
-          if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction %2 == 1) {
-            currpop.organism[org].allele[hap].pro_direction = 0;
+          if (mut_dir2 == 1 && lin.generation[gen].organism[org].allele[hap].pro_direction %2 == 1) {
+            lin.generation[gen].organism[org].allele[hap].pro_direction = 0;
           }
-          if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction %2 == 0) {
-            currpop.organism[org].allele[hap].pro_direction = 1;
+          if (mut_dir2 == 1 && lin.generation[gen].organism[org].allele[hap].pro_direction %2 == 0) {
+            lin.generation[gen].organism[org].allele[hap].pro_direction = 1;
           }
    
 
         }
+          int mig_rand = rand()%3;
+          int mig_dist;
+
+          if (mig_rand == 0)
+          {
+            mig_dist = 0;
+          }
+          if (mig_rand == 1)
+          {
+            mig_dist = 1;
+          }
+          if (mig_rand == 2)
+          {
+            mig_dist = -1;
+          }
+            lin.generation[gen].organism[org].location = lin.generation[gen-1].organism[parent1].location + mig_dist;
+          fprintf (flocation, "%d,", lin.generation[gen].organism[org].location);
+          
+          if (lin.generation[gen].organism[org].location > 100)
+          {
+            lin.generation[gen].organism[org].location = 100;
+          } 
+          if (lin.generation[gen].organism[org].location < -100)
+          {
+            lin.generation[gen].organism[org].location = -100;
+          } 
+          if (org == (pop-1))
+          {
+            fprintf(flocation, "\n"); 
+          }
 
         int h, j, k;
 
@@ -417,7 +507,7 @@ for (count = 0; count < 5; count ++){
         {
           for (j = 0; j < 5; j++)
           {
-            currpop.organism[org].GRN[h][j] = 0;
+            lin.generation[gen].organism[org].GRN[h][j] = 0;
           }
         }
 
@@ -427,15 +517,15 @@ for (count = 0; count < 5; count ++){
           {
             for (k = 0; k < g; k++)
             {
-              if (currpop.organism[org].allele[h].regulator[k] == currpop.organism[org].allele[j].protein[k])
+              if (lin.generation[gen].organism[org].allele[h].regulator[k] == lin.generation[gen].organism[org].allele[j].protein[k])
               {
-                currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] + 0.005);
+                lin.generation[gen].organism[org].GRN[h][j] = (lin.generation[gen].organism[org].GRN[h][j] + 0.01);
               }
             }
 
-            // if (currpop.organism[org].allele[h].reg_direction == 0)
+            // if (lin.generation[gen].organism[org].allele[h].reg_direction == 0)
             // {
-            //   currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1));
+            //   lin.generation[gen].organism[org].GRN[h][j] = (lin.generation[gen].organism[org].GRN[h][j] * (-1));
             // }
           }
          }
@@ -445,48 +535,52 @@ for (count = 0; count < 5; count ++){
   {
     for (j = 0; j < 5; j++)
     {
-     //   currpop.organism[org].GRN[h][j] = pow(0.5 + (exp(6 - currpop.organism[org].GRN[h][j]))/5, -1);
-      if (currpop.organism[org].allele[h].reg_direction == currpop.organism[org].allele[j].pro_direction)
+        // lin.generation[gen].organism[org].GRN[h][j] = pow(0.5 + (exp(6 - lin.generation[gen].organism[org].GRN[h][j]))/5, -1);
+      if (lin.generation[gen].organism[org].allele[h].reg_direction == lin.generation[gen].organism[org].allele[j].pro_direction)
       {
-        currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1));
+        lin.generation[gen].organism[org].GRN[h][j] = (lin.generation[gen].organism[org].GRN[h][j] * (-1));
       }
     }
   }
   
 
   /* don't need pmat now that matrix_vec_mult has mat[5][5] instead **mat now */
-  //       double *pmat[] = {currpop.organism[org].GRN[0], currpop.organism[org].GRN[1], currpop.organism[org].GRN[2], currpop.organism[org].GRN[3], currpop.organism[org].GRN[4]};
-         currpop.organism[org].phenotype = mat_power (currpop.organism[org].GRN, y, 5, 5, 10); 
+  //       double *pmat[] = {lin.generation[gen].organism[org].GRN[0], lin.generation[gen].organism[org].GRN[1], lin.generation[gen].organism[org].GRN[2], lin.generation[gen].organism[org].GRN[3], lin.generation[gen].organism[org].GRN[4]};
+         lin.generation[gen].organism[org].phenotype = mat_power (lin.generation[gen].organism[org].GRN, y, 5, 5, 100); 
 
-       double euc_dist = sqrt (vectors_dot_prod (currpop.organism[org].phenotype, currpop.organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, currpop.organism[org].phenotype, 5) ) );
+       double euc_dist = sqrt (vectors_dot_prod (lin.generation[gen].organism[org].phenotype, lin.generation[gen].organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, lin.generation[gen].organism[org].phenotype, 5) ) );
 //  printf ("norm = %f\n", euc_dist);
 
-       currpop.organism[org].fitness = exp (((-1) * pow ((euc_dist), 2)));
-       //free(currpop.organism[org].phenotype);
-      if ( (gen == 1 || gen % 1000 == 0) && org == 0 ){
-       printf ("GENERATION %d fitness-%d = %f\n", gen, org, currpop.organism[org].fitness);  
+       lin.generation[gen].organism[org].fitness = exp (((-1) * (pow ((euc_dist), 2))));
+    /*   if (lin.generation[gen].organism[org].fitness <= 0.000001)
+       {
+         lin.generation[gen].organism[org].fitness = 0.000001;
+       }*/
+       if ( (gen == 1 || gen % 1000 == 0) && org == 1 ){
+       printf ("GENERATION %d fitness-%d = %f\n", gen, org, lin.generation[gen].organism[org].fitness);  
          int q, r;
           for (q = 0; q < 5; q++) {
             for (r = 0; r < 5; r++) {
-              printf ("%f ", currpop.organism[org].GRN[q][r]);
+              printf ("%f ", lin.generation[gen].organism[org].GRN[q][r]);
             }
             printf ("\n");
           }
-   /*   for (hap = 0; hap < 5; hap++) {
+    /*  for (hap = 0; hap < 5; hap++) {
         printf ("Gene %d\n", hap); 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < g; i++) {
 
-          printf ("%d\t%d\n", currpop.organism[org].allele[hap].regulator[i], currpop.organism[org].allele[hap].protein[i] );
+          printf ("%d\t%d\n", lin.generation[gen].organism[org].allele[hap].regulator[i], lin.generation[gen].organism[org].allele[hap].protein[i] );
 
           }
-       } */ 
+       } */
      }
+         meanfit += lin.generation[gen].organism[org].fitness*0.01;
      if (gen % 100 == 0)
      {
-         meanfit += currpop.organism[org].fitness*0.01;
          if (org == (pop - 1))
          {
            fprintf (fit, "%f\n,", meanfit);
+           meanfit = 0;
          }
      }
 
@@ -494,11 +588,12 @@ for (count = 0; count < 5; count ++){
   }
 
   fclose(fit);
+  fclose(flocation);
 /*  FILE *f; 
  *  f = fopen ("long-run-lin1.dat", "wb"); 
  *  fwrite (lin.generation, sizeof(population), 10000000, f); 
  *  fclose(f);  
- */ // free (lin.generation); 
+ */  free (lin.generation); 
 }  
 
 
