@@ -14,7 +14,7 @@
  */
 static const int g = 20;
 static const int N = 500000;
-static const int pop = 1000;
+static const int pop = 100;
 static const int mutate = 5000;
 /* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
  * The random number generated below determines the probability an individual will be chosen to reproduce and is essential to simulate Natural Selection.
@@ -45,7 +45,7 @@ static const int mutate = 5000;
 
 double weight_rand (double *fitnesses)
 {
-  double rnd = rand()/(double) RAND_MAX;
+  double rnd = (double) rand()/(double) RAND_MAX;
   double totalfitness = 0;
   double probability[pop];
   double weights;
@@ -72,7 +72,7 @@ double weight_rand (double *fitnesses)
 
 double geography_rand (double *fitnesses, int *geog)
 {
-  double rnd = rand()/(double) RAND_MAX;
+  double rnd = (double) rand()/(double) RAND_MAX;
   double totalfitness = 0;
   double probability[pop];
   double mateprob[pop];
@@ -80,7 +80,7 @@ double geography_rand (double *fitnesses, int *geog)
   int survivor;
   for (int l = 0; l < pop; l++)
   {
-    mateprob[l] = fitnesses[l] * exp(-geog[l]/5);
+    mateprob[l] = fitnesses[l] * exp(-geog[l]);
   }
   for (int i = 0; i < pop; i++)
   {
@@ -156,12 +156,12 @@ double add_result[5] = {0, 0, 0, 0, 0};
 double* vec_add (double vec1[5], double vec2[5]) {
     for (int i = 0; i < 5; i++) {
     add_result[i] = vec1[i] + vec2[i];
-      if (add_result[i] < 0) {
-       add_result[i] = 0; 
-      }
-      if (add_result[i] > 1) {
-        add_result[i] = 1; 
-      } 
+   //   if (add_result[i] < 0) {
+   //    add_result[i] = 0; 
+   //   }
+   //   if (add_result[i] > 1) {
+   //     add_result[i] = 1; 
+   //   } 
     }
   return add_result;
 }
@@ -301,8 +301,8 @@ int  main () {
   double optimal_phenotype[5]; // = {2, 2, 2, 2, 2}; 
   for (int ph = 0; ph < 5; ph++)
   {
-    y[ph] = (rand()/(double) RAND_MAX);
-    optimal_phenotype[ph] = (rand()/(double) RAND_MAX);
+    y[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
+    optimal_phenotype[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
   }
   /* y[5] is a 5 dimensional initial vector.
    * Interpreted as the "environment."
@@ -422,7 +422,14 @@ for (count = 0; count < 5; count ++){
     prevpop = currpop; 
     int org;
     meanfit = 0;
-    double fitnesses[pop]; 
+    double fitnesses[pop];
+      if (gen % 50000 == 0)
+      {
+        for (int ph = 0; ph < 5; ph++)
+        {
+          optimal_phenotype[ph] = ((double) rand()/(double) RAND_MAX) * (rand()%10);
+        }
+      }
       for (org = 0; org < pop; org++) {
         fitnesses[org] = prevpop.organism[org].fitness;
        // printf ("org %d fitness - %f\n ", org, fitnesses[org]);
@@ -431,25 +438,30 @@ for (count = 0; count < 5; count ++){
         
         int parent1 = weight_rand(fitnesses);
         //printf("gen-%d  org-%d parent-%d\n", gen, org, parent1);
-        int geog[pop];
-          for (int loc = 0; loc < pop; loc++)
-          {
-             geog[loc] = abs(prevpop.organism[parent1].location - prevpop.organism[loc].location);
-          }
+      //  int geog[pop];
+      //    for (int loc = 0; loc < pop; loc++)
+      //    {
+      //       geog[loc] = abs(prevpop.organism[parent1].location - prevpop.organism[loc].location);
+      //    }
         
-          int parent2 = geography_rand(fitnesses, geog);  
-      //  int parent2 = weight_rand(fitnesses);
+       //  int parent2 = geography_rand(fitnesses, geog);  
+        int parent2 = weight_rand(fitnesses);
   //      printf ("organism %d has parent 1 = %d and parent 2 = %d\n" , org, parent1, parent2);     
         for (hap = 0; hap < 5; hap++){
-       //   if (org < (pop/2))
-       //   {
-       //     currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
-       //   }
-          if (/*org > (pop/2) && */(hap == 0 || hap == 2 || hap == 3)) {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
+          int rec = rand()%2;
+   //       if (org < (pop/2))
+   //       {
+   //         currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
+   //       }
+          if (/* org > (pop/2) && */rec == 0) {
+            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap];
+            currpop.organism[org].allele[hap].reg_direction = prevpop.organism[parent1].allele[hap].reg_direction;
+            currpop.organism[org].allele[hap].pro_direction = prevpop.organism[parent1].allele[hap].pro_direction; 
         }
-          if (/*org > (pop/2) && */ (hap == 1 || hap == 4)) {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent2].allele[hap]; 
+          if (/* org > (pop/2) &&  */rec == 1) {
+            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
+            currpop.organism[org].allele[hap].reg_direction = prevpop.organism[parent1].allele[hap].reg_direction;
+            currpop.organism[org].allele[hap].pro_direction = prevpop.organism[parent1].allele[hap].pro_direction; 
           }
           
           for (int nuc = 0; nuc < g; nuc++) {
@@ -492,13 +504,13 @@ for (count = 0; count < 5; count ++){
           if (mut_dir == 1 && currpop.organism[org].allele[hap].reg_direction == 1) {
             currpop.organism[org].allele[hap].reg_direction = 0; 
           }
-          if (mut_dir == 1 && currpop.organism[org].allele[hap].reg_direction == 0) {
+          else if (mut_dir == 1 && currpop.organism[org].allele[hap].reg_direction == 0) {
             currpop.organism[org].allele[hap].reg_direction = 1;
           }
-          if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction %2 == 1) {
+          if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction  == 1) {
             currpop.organism[org].allele[hap].pro_direction = 0;
           }
-          if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction %2 == 0) {
+          else if (mut_dir2 == 1 && currpop.organism[org].allele[hap].pro_direction  == 0) {
             currpop.organism[org].allele[hap].pro_direction = 1;
           }
    
@@ -548,7 +560,7 @@ for (count = 0; count < 5; count ++){
             {
               if (currpop.organism[org].allele[h].regulator[k] == currpop.organism[org].allele[j].protein[k])
               {
-                currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] + 0.01);
+                currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] + 0.001);
               }
             }
 
@@ -565,7 +577,7 @@ for (count = 0; count < 5; count ++){
     for (j = 0; j < 5; j++)
     {
         // currpop.organism[org].GRN[h][j] = pow(0.5 + (exp(6 - currpop.organism[org].GRN[h][j]))/5, -1);
-      if (currpop.organism[org].allele[h].reg_direction == currpop.organism[org].allele[j].pro_direction)
+      if (currpop.organism[org].allele[h].reg_direction != currpop.organism[org].allele[j].pro_direction)
       {
         currpop.organism[org].GRN[h][j] = (currpop.organism[org].GRN[h][j] * (-1));
       }
@@ -581,6 +593,11 @@ for (count = 0; count < 5; count ++){
 //  printf ("norm = %f\n", euc_dist);
 
        currpop.organism[org].fitness = exp (((-1) * (pow ((euc_dist), 2))));
+       if (currpop.organism[org].fitness <= 0.0000001)
+       {
+         currpop.organism[org].fitness = 0.0000001; 
+       }
+
     /*   if (currpop.organism[org].fitness <= 0.000001)
        {
          currpop.organism[org].fitness = 0.000001;
