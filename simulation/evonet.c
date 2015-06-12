@@ -48,7 +48,8 @@ double weight_rand (double *fitnesses)
   double rnd = (double) rand()/(double) RAND_MAX;
   double totalfitness = 0;
   double probability[pop];
-  double weights;
+  double weights = 0;
+  // weights MUST be set to 0, otherwise function cannot properly be called more than once! 
   int survivor;
   for (int i = 0; i < pop; i++)
   {
@@ -76,7 +77,7 @@ double geography_rand (double *fitnesses, int *geog)
   double totalfitness = 0;
   double probability[pop];
   double mateprob[pop];
-  double weights;
+  double weights = 0;
   int survivor;
   for (int l = 0; l < pop; l++)
   {
@@ -459,9 +460,9 @@ for (count = 0; count < 5; count ++){
             currpop.organism[org].allele[hap].pro_direction = prevpop.organism[parent1].allele[hap].pro_direction; 
         }
           if (/* org > (pop/2) &&  */rec == 1) {
-            currpop.organism[org].allele[hap] = prevpop.organism[parent1].allele[hap]; 
-            currpop.organism[org].allele[hap].reg_direction = prevpop.organism[parent1].allele[hap].reg_direction;
-            currpop.organism[org].allele[hap].pro_direction = prevpop.organism[parent1].allele[hap].pro_direction; 
+            currpop.organism[org].allele[hap] = prevpop.organism[parent2].allele[hap]; 
+            currpop.organism[org].allele[hap].reg_direction = prevpop.organism[parent2].allele[hap].reg_direction;
+            currpop.organism[org].allele[hap].pro_direction = prevpop.organism[parent2].allele[hap].pro_direction; 
           }
           
           for (int nuc = 0; nuc < g; nuc++) {
