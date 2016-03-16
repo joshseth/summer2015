@@ -15,7 +15,7 @@
 static const int g = 20;
 static const int N = 500000;
 static const int pop = 100;
-static const int mutate = 100000;
+static const int mutate = 1000;
 /* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
  * The random number generated below determines the probability an individual will be chosen to reproduce and is essential to simulate Natural Selection.
  */
@@ -238,10 +238,10 @@ int  main () {
 
   double meanfit;
   FILE *fit; 
-  fit = fopen ("evo_fitness1e5.dat", "w");
+  fit = fopen ("evo_fitness1e3.dat", "w");
 
   FILE *flocation;
-  flocation = fopen("evo_location1e5.dat", "w");
+  flocation = fopen("evo_location1e3.dat", "w");
 
   time_t time;
   srand ((unsigned) (&time));
