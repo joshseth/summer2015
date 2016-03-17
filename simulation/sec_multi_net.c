@@ -15,14 +15,15 @@
  * pop := population size. 
  */
 static const int g = 20;
-static const int N = 1000;
+static const int N = 10000;
 static const int pop = 100;
-static const int mutate = 1000;
-/* weight_rand := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
+static const int MUTATE = 10000;
+static const int CHROMOSOMES = 5; 
+/* select_mate := Smirnov Transform Algorithm to weight random number to be proportional to individual fitness score.
  * The random number generated below determines the probability an individual will be chosen to reproduce and is essential to simulate Natural Selection.
  */
 
-double weight_rand (double *fitnesses)
+double select_mate (double *fitnesses)
 {
   double rnd = (double) rand()/(double) RAND_MAX;
   double totalfitness = 0;
@@ -156,6 +157,54 @@ double* mat_power(double mat[5][5], double *vec, int rows, int cols, int power) 
 
 }
 
+
+
+ int point_mutate(int seq[], int mutation_rate) 
+    {
+      int *genetic_sequence;
+      genetic_sequence = &seq[0]; 
+          for (int nuc = 0; nuc < g; nuc++) 
+            {
+              int mutation_probability = rand()%mutation_rate;
+              int mutation_target = rand()%4; 
+
+              for (int tar = 0; mutation_probability == 1 && mutation_target == tar && tar < 4; tar++)
+              {
+                    genetic_sequence[nuc] = tar;
+              }
+            }
+          return (genetic_sequence[0]); 
+    }
+
+
+
+
+  int mutate_regulatory_direction(int expression_direction, int direction_change_rate)
+    {
+      int mut_dir  = rand()%direction_change_rate;
+      if (mut_dir == 1 && expression_direction == 1)
+        {
+          expression_direction = 0; 
+        }
+      else if (mut_dir == 1 && expression_direction == 0)
+        {
+          expression_direction = 1;
+        }
+       return expression_direction; 
+     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////////
 
 ////////
@@ -223,321 +272,246 @@ typedef struct {
  *                                     so it is now cast as a pointer and the size of the array is determined in int main ().
  */
 
-typedef struct {
-
-// population generation[1000];
- population *generation;
-} lineage;
 
 
 /* **************************************************** BEGINING OF CODE EXECUTION ************************************************************
  *
- * int main().
  *
  */
 
-int  main () {
-
-  double meanfit;
-  FILE *fit; 
-  fit = fopen ("evo_fitness1e3.dat", "w");
-
-  FILE *flocation;
-  flocation = fopen("evo_location1e3.dat", "w");
-
-  time_t time;
-  srand ((unsigned) (&time));
-  /* "time_t" above ensures better random number generation since it uses time.
-   */
-
-  //lineage lin;
-  //lin.generation = (population*) malloc (N * sizeof(population));
-  /* Assigning a lineage struct to to "lin"
-   * lin.generation is an array of 1,000,000 populations. 
-   */
- // population currpop;
- // population prevpop;
-  population *currpop, *prevpop;
-  currpop = (population*) malloc(sizeof(population));
-  //prevpop = (population*) malloc(sizeof(population));
-  //currpop = malloc (10000000*sizeof(int));
-  //population *prevpop;
-  //prevpop = malloc (10000000*sizeof(int)); 
-
-  int count;
-
-   double y[5]; // = {1, 1, 1, 1, 1};  
-  double optimal_phenotype[5]; // = {2, 2, 2, 2, 2};
-
-  for (int ph = 0; ph < 5; ph++)
+  int  main ()
   {
-    y[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
-    optimal_phenotype[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
-  }
 
+    double meanfit;
+    FILE *fit; 
+    fit = fopen ("evo_fitness1e3.dat", "w");
 
-  /* y[5] is a 5 dimensional initial vector.
-   * Interpreted as the "environment."
-   */
+    FILE *flocation;
+    flocation = fopen("evo_location1e3.dat", "w");
 
-  /* the below for loop generates ONLY the first generation (currpop) of the simulation. 
-   * All individuals in this generation are identical and random.
-   */
+    time_t time;
+    srand ((unsigned) (&time));
+    population *currpop, *prevpop;
+    currpop = (population*) malloc(sizeof(population));
 
-    currpop->organism[0].location = 0;   
+    int count;
 
-    for (count = 0; count < 5; count++) {
+     double y[5]; // = {1, 1, 1, 1, 1};  
+    double optimal_phenotype[5]; // = {2, 2, 2, 2, 2};
 
-      currpop->organism[0].allele[count].reg_direction = rand()%2;
-      currpop->organism[0].allele[count].pro_direction = rand()%2;  
-
-      int i;
-      int p_rand[g];
-      int r_rand[g]; 
-      printf ("GENE %d\n", count); 
-
-      for (i = 0; i < g; i++) {
-      p_rand[i] = rand()%4;
-      r_rand[i] = rand()%4;
-      currpop->organism[0].allele[count].regulator[i] = r_rand[i];
-      currpop->organism[0].allele[count].protein[i] = p_rand[i];	
-      printf ("%d\t%d\n", currpop->organism[0].allele[count].regulator[i], currpop->organism[0].allele[count].protein[i] );
-      }
-  }
-  int h;
-  int j;
-  int k;
-  for (h = 0; h < 5; h++) {
-    for (j = 0; j < 5; j++) {
-      for (k = 0; k < g; k++) {
-        if (currpop->organism[0].allele[h].regulator[k] == currpop->organism[0].allele[j].protein[k]) {
-         currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j]) + 1;
-          }
-      }
-      if (currpop->organism[0].allele[h].reg_direction == currpop->organism[0].allele[j].pro_direction) {
-         currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j] * (-1)); 
-      }
-    }
-	}
-
-  for (h = 0; h < 5; h++)
-  {
-    for (j = 0; j < 5; j++)
+    for (int ph = 0; ph < 5; ph++)
     {
-    //  currpop->organism[org].GRN[h][j] = pow(0.5 + (exp(6 - currpop->organism[org].GRN[h][j]))/5, -1);
+      y[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
+      optimal_phenotype[ph] = ((double) rand()/(double) RAND_MAX)*(rand()%10);
+    }
 
-      if (currpop->organism[0].allele[h].reg_direction == 1)
-      {
-        currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j] * (-1)); 
+
+    /* y[5] is a 5 dimensional initial vector.
+     * Interpreted as the "environment."
+     */
+
+    /* the below for loop generates ONLY the first generation (currpop) of the simulation. 
+     * All individuals in this generation are identical and random.
+     */
+
+      currpop->organism[0].location = 0;   
+
+      for (count = 0; count < 5; count++) {
+
+        currpop->organism[0].allele[count].reg_direction = rand()%2;
+        currpop->organism[0].allele[count].pro_direction = rand()%2;  
+
+        int i;
+        int p_rand[g];
+        int r_rand[g]; 
+        printf ("GENE %d\n", count); 
+
+        for (i = 0; i < g; i++) {
+        p_rand[i] = rand()%4;
+        r_rand[i] = rand()%4;
+        currpop->organism[0].allele[count].regulator[i] = r_rand[i];
+        currpop->organism[0].allele[count].protein[i] = p_rand[i];	
+        printf ("%d\t%d\n", currpop->organism[0].allele[count].regulator[i], currpop->organism[0].allele[count].protein[i] );
+        }
+    }
+    int h;
+    int j;
+    int k;
+    for (h = 0; h < 5; h++) {
+      for (j = 0; j < 5; j++) {
+        for (k = 0; k < g; k++) {
+          if (currpop->organism[0].allele[h].regulator[k] == currpop->organism[0].allele[j].protein[k]) {
+           currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j]) + 1;
+            }
+        }
+        if (currpop->organism[0].allele[h].reg_direction == currpop->organism[0].allele[j].pro_direction) {
+           currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j] * (-1)); 
+        }
       }
     }
-  }
-	
-  int q, r; 
-  for (q = 0; q < 5; q++) {
-    for (r = 0; r < 5; r++) {
-    printf ("%f ", currpop->organism[0].GRN[q][r]);
+
+    for (h = 0; h < 5; h++)
+    {
+      for (j = 0; j < 5; j++)
+      {
+
+        if (currpop->organism[0].allele[h].reg_direction == 1)
+        {
+          currpop->organism[0].GRN[h][j] = (currpop->organism[0].GRN[h][j] * (-1)); 
+        }
+      }
     }
-  printf ("\n"); 
-  }
+    
+    int q, r; 
+    for (q = 0; q < 5; q++) {
+      for (r = 0; r < 5; r++) {
+      printf ("%f ", currpop->organism[0].GRN[q][r]);
+      }
+    printf ("\n"); 
+    }
 
 
-  int i; 
+    int i; 
 
-  printf("\nMatrix iteration:\n");
-  currpop->organism[0].phenotype = mat_power(currpop->organism[0].GRN, y, 5, 5, 10);
-  for (i = 0; i < 5; i++) {
-    printf ("%f\n", currpop->organism[0].phenotype[i]);
-  }
+    currpop->organism[0].phenotype = mat_power(currpop->organism[0].GRN, y, 5, 5, 10);
 
-  double euc_dist = sqrt (vectors_dot_prod (currpop->organism[0].phenotype, currpop->organism[0].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, currpop->organism[0].phenotype, 5) ) ); 
-  printf ("norm = %f\n", euc_dist); 
-  
-  currpop->organism[0].fitness = exp ((-1) * (pow(euc_dist, 2)));
+    double euc_dist = sqrt (vectors_dot_prod (currpop->organism[0].phenotype, currpop->organism[0].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, currpop->organism[0].phenotype, 5) ) ); 
+    
+    currpop->organism[0].fitness = exp ((-1) * (pow(euc_dist, 2)));
 
-  printf ("fitness-%d = %f\n", 0, currpop->organism[0].fitness);    
-
-  
-
-for (int tst = 1; tst < pop; tst++) {
-currpop->organism[tst] = currpop->organism[0];
-}
-for (count = 0; count < 5; count ++){
-  printf( "copy gene %d\n", count); 
-  for (int i = 0; i < g; i++) {
-    printf ("%d\t%d\n", currpop->organism[1].allele[count].regulator[i], currpop->organism[0].allele[count].protein[i] );
-  }
-}
+    for (int tst = 1; tst < pop; tst++)
+    {
+      currpop->organism[tst] = currpop->organism[0];
+    }
 
 /***************************** Simulation after initial (0th) generation *************************
  *
  */
 
-  int gen;
-//  int hap; 
 
-  for (gen = 1; gen < N; gen ++) {
-    prevpop = currpop; 
+  for ( int gen = 1; gen < N; gen++ )
+
+  {
+
+    prevpop = currpop;
     int org;
     meanfit = 0;
     double fitnesses[pop];
-    //  if (gen % 5000 == 0)
-    //  {
-    //    for (int ph = 0; ph < 5; ph++)
-    //    {
-    //      optimal_phenotype[ph] = ((double) rand()/(double) RAND_MAX) * (rand()%10);
-    //    }
-    //  }
-      for (org = 0; org < pop; org++) {
-        fitnesses[org] = prevpop->organism[org].fitness;
-      }
-#pragma omp parallel for shared(currpop, prevpop) private(org, add_result, mult_result) 
-      for (org = 0; org < pop; org++) {
-        
-        int parent1 = weight_rand(fitnesses);
-        //printf("gen-%d  org-%d parent-%d\n", gen, org, parent1);
-      //  int geog[pop];
-      //    for (int loc = 0; loc < pop; loc++)
-      //    {
-      //       geog[loc] = abs(prevpop->organism[parent1].location - prevpop->organism[loc].location);
-      //    }
-        
-       //  int parent2 = geography_rand(fitnesses, geog);  
-        int parent2 = weight_rand(fitnesses);
-  //      printf ("organism %d has parent 1 = %d and parent 2 = %d\n" , org, parent1, parent2);     
-        for (int hap = 0; hap < 5; hap++){
-          int rec = rand()%2;
-   //       if (org < (pop/2))
-   //       {
-   //         currpop->organism[org].allele[hap] = prevpop->organism[parent1].allele[hap]; 
-   //       }
-          if (/* org > (pop/2) && */rec == 0) {
-            currpop->organism[org].allele[hap] = prevpop->organism[parent1].allele[hap];
-        }
-          if (/* org > (pop/2) &&  */rec == 1) {
-            currpop->organism[org].allele[hap] = prevpop->organism[parent2].allele[hap]; 
-          }
-          
-          for (int nuc = 0; nuc < g; nuc++) {
-            int mut_reg1 = rand()%mutate;
-            int mut_reg2 = rand()%4; 
-            int mut_pro1 = rand()%mutate;
-            int mut_pro2 = rand()%4; 
-            
-            if (mut_reg1 == 1 && mut_reg2 == 0) {  
-              currpop->organism[org].allele[hap].regulator[nuc] = 0; 
-            } 
-            if (mut_reg1 == 1 && mut_reg2 == 1) {
-              currpop->organism[org].allele[hap].regulator[nuc] = 1; 
-            }
-            if (mut_reg1 == 1 && mut_reg2 == 2) {
-              currpop->organism[org].allele[hap].regulator[nuc] = 2; 
-            }
-            if (mut_reg1 == 1 && mut_reg2 == 3) {
-              currpop->organism[org].allele[hap].regulator[nuc] = 3;
-            }
 
-            if (mut_pro1 == 1 && mut_pro2 == 0) {
-              currpop->organism[org].allele[hap].protein[nuc] = 0; 
-            }
-            if (mut_pro1 == 1 && mut_pro2 == 1) {
-              currpop->organism[org].allele[hap].protein[nuc] = 1; 
-            }
-            if (mut_pro1 == 1 && mut_pro2 == 2) {
-              currpop->organism[org].allele[hap].protein[nuc] = 2;
-            }
-            if (mut_pro1 == 1 && mut_pro2 == 3) {
-              currpop->organism[org].allele[hap].protein[nuc] = 3;
-            }
+      for ( org = 0; org < pop; org++ )
 
-//      printf ("%d\t%d\n", currpop->organism[0].allele[hap].protein[nuc], currpop->organism[org].allele[hap].protein[nuc] );
-          }
-//      printf ("\n"); 
-            int mut_dir  = rand()%mutate;
-            int mut_dir2 = rand()%mutate;  
-          if (mut_dir == 1 && currpop->organism[org].allele[hap].reg_direction == 1) {
-            currpop->organism[org].allele[hap].reg_direction = 0; 
-          }
-          else if (mut_dir == 1 && currpop->organism[org].allele[hap].reg_direction == 0) {
-            currpop->organism[org].allele[hap].reg_direction = 1;
-          }
-          if (mut_dir2 == 1 && currpop->organism[org].allele[hap].pro_direction  == 1) {
-            currpop->organism[org].allele[hap].pro_direction = 0;
-          }
-          else if (mut_dir2 == 1 && currpop->organism[org].allele[hap].pro_direction  == 0) {
-            currpop->organism[org].allele[hap].pro_direction = 1;
-          }
-   
-
-        }
-        //  int mig_rand = rand()%3;
-        //  int mig_dist;
-
-        //  if (mig_rand == 0)
-        //  {
-        //    mig_dist = 0;
-        //  }
-        //  if (mig_rand == 1)
-        //  {
-        //    mig_dist = 1;
-        //  }
-        //  if (mig_rand == 2)
-        //  {
-        //    mig_dist = -1;
-        //  }
-        //    currpop->organism[org].location = prevpop->organism[parent1].location + mig_dist;
-        //  if (gen % 100 == 0)
-        //  {
-        //    fprintf (flocation, "%d,", currpop->organism[org].location);
-        //    if (org == (pop-1))
-        //    {
-        //      fprintf(flocation, "\n"); 
-        //    }
-        //  }
-          
-
-        int h, j, k;
-
-        for (h = 0; h < 5; h++)
-        {
-          for (j = 0; j < 5; j++)
-          {
-            currpop->organism[org].GRN[h][j] = 0;
-          }
-        }
-
-        for (h = 0; h < 5; h++)
-        {
-          for (j = 0; j < 5; j++)
-          {
-            for (k = 0; k < g; k++)
-            {
-              if (currpop->organism[org].allele[h].regulator[k] == currpop->organism[org].allele[j].protein[k])
-              {
-                currpop->organism[org].GRN[h][j] = (currpop->organism[org].GRN[h][j] + 0.001);
-              }
-            }
-
-          }
-         }
-
-
-  for (h = 0; h < 5; h++)
-  {
-    for (j = 0; j < 5; j++)
-    {
-        // currpop->organism[org].GRN[h][j] = pow(0.5 + (exp(6 - currpop->organism[org].GRN[h][j]))/5, -1);
-      if (currpop->organism[org].allele[h].reg_direction != currpop->organism[org].allele[j].pro_direction)
       {
-        currpop->organism[org].GRN[h][j] = (currpop->organism[org].GRN[h][j] * (-1));
+
+        fitnesses[org] = prevpop->organism[org].fitness;
+
       }
-    }
-  }
-  
 
-         currpop->organism[org].phenotype = mat_power (currpop->organism[org].GRN, y, 5, 5, 100); 
 
-       double euc_dist = sqrt (vectors_dot_prod (currpop->organism[org].phenotype, currpop->organism[org].phenotype, 5) + vectors_dot_prod (optimal_phenotype, optimal_phenotype, 5) - (2 * vectors_dot_prod (optimal_phenotype, currpop->organism[org].phenotype, 5) ) );
+#pragma omp parallel for shared(currpop, prevpop) private(org, add_result, mult_result) 
+
+      for (org = 0; org < pop; org++)
+
+      {
+        int h, j, k;
+/////////////////////////////////////////////////////// Choose Two Parents to Make a new Organism ////////////////////////////////////////////////////////////////////////
+
+        int parent1 = select_mate(fitnesses);
+        int parent2 = select_mate(fitnesses);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        for (int hap = 0; hap < CHROMOSOMES; hap++)
+
+        {
+//////////////////////////////////////////////////////////////////// Recombine the Two Parental Genomes to Form a New Organism ////////////////////////////////////////////
+
+          int rec = rand() % 2 == 0 ? parent1 : parent2;
+          currpop->organism[org].allele[hap] = prevpop->organism[rec].allele[hap]; 
+
+///////////////////////////////// Point Mutations of Both Regulatory and Protein Coding Regions for all genes  ////////////////////////////////////////////////////////////
+
+           currpop->organism[org].allele[hap].regulator[0] = point_mutate ( currpop->organism[org].allele[hap].regulator, MUTATE );
+           currpop->organism[org].allele[hap].protein[0] = point_mutate ( currpop->organism[org].allele[hap].protein, MUTATE );
+
+///////////////////////////////// Expression Direction Mutation for Both Regulatory and Protein Interaction terms /////////////////////////////////////////////////////////
+
+           currpop->organism[org].allele[hap].reg_direction = mutate_regulatory_direction ( currpop->organism[org].allele[hap].reg_direction, MUTATE );
+           currpop->organism[org].allele[hap].pro_direction = mutate_regulatory_direction ( currpop->organism[org].allele[hap].pro_direction, MUTATE );
+
+        }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////// Below for loop ensures entries of the GRN Matrix are Zeroed Out. It is necessary ////////////////////////////////////////////////////
+
+        for ( h = 0; h < CHROMOSOMES; h++ )
+
+        {
+
+          for ( j = 0; j < CHROMOSOMES; j++ )
+
+          {
+
+            currpop->organism[org].GRN[h][j] = 0;
+
+          }
+
+        }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        for ( h = 0; h < CHROMOSOMES; h++ )
+
+        {
+
+          for ( j = 0; j < CHROMOSOMES; j++ )
+
+          {
+
+            for ( k = 0; k < g; k++ )
+
+            {
+
+              if ( currpop->organism[org].allele[h].regulator[k] == currpop->organism[org].allele[j].protein[k] )
+
+              {
+
+                currpop->organism[org].GRN[h][j] = ( currpop->organism[org].GRN[h][j] + 0.001 );
+              }
+
+            }
+
+          }
+
+        }
+
+
+        for ( h = 0; h < CHROMOSOMES; h++ )
+
+        {
+
+          for ( j = 0; j < CHROMOSOMES; j++ )
+
+          {
+
+            if ( currpop->organism[org].allele[h].reg_direction != currpop->organism[org].allele[j].pro_direction )
+
+            {
+
+              currpop->organism[org].GRN[h][j] = ( currpop->organism[org].GRN[h][j] * ( -1 ) );
+
+            }
+          }
+        }
+
+
+         currpop->organism[org].phenotype = mat_power ( currpop->organism[org].GRN, y, CHROMOSOMES, CHROMOSOMES, 100 );
+
+
+       double euc_dist =
+         sqrt ( vectors_dot_prod ( currpop->organism[org].phenotype, currpop->organism[org].phenotype, 5 )
+           + vectors_dot_prod ( optimal_phenotype, optimal_phenotype, 5 )
+           - ( 2 * vectors_dot_prod ( optimal_phenotype, currpop->organism[org].phenotype, 5 ) ) );
+
 
        currpop->organism[org].fitness = exp (((-1) * (pow ((euc_dist), 2))));
        if (currpop->organism[org].fitness <= 0.0000001)
@@ -545,24 +519,30 @@ for (count = 0; count < 5; count ++){
          currpop->organism[org].fitness = 0.0000001; 
        }
 
-       if ( (gen == 1 || gen % 1000 == 0) && org == 1 ){
-       printf ("GENERATION %d fitness-%d = %f\n", gen, org, currpop->organism[org].fitness);  
+       if ( ( gen == 1 || gen % 1000 == 0 ) && org == 1 )
+
+       {
+
+         printf ( "GENERATION %d fitness-%d = %f\n", gen, org, currpop->organism[org].fitness );
+
          int q, r;
-          for (q = 0; q < 5; q++) {
-            for (r = 0; r < 5; r++) {
-              printf ("%f ", currpop->organism[org].GRN[q][r]);
+
+            for ( q = 0; q < CHROMOSOMES; q++ )
+
+            {
+
+              for ( r = 0; r < CHROMOSOMES; r++ )
+
+              {
+
+                printf ( "%f ", currpop->organism[org].GRN[q][r] );
+
+              }
+
+              printf ( "\n" );
+
             }
-            printf ("\n");
-          }
-    /*  for (hap = 0; hap < 5; hap++) {
-        printf ("Gene %d\n", hap); 
-        for (int i = 0; i < g; i++) {
-
-          printf ("%d\t%d\n", currpop->organism[org].allele[hap].regulator[i], currpop->organism[org].allele[hap].protein[i] );
-
-          }
-       } */
-     }
+       }
 //         meanfit += currpop->organism[org].fitness*0.01;
 //     if (gen % 1 == 0)
 //     {
@@ -572,29 +552,21 @@ for (count = 0; count < 5; count ++){
 //         }
 //     }
 
-      }
-  }
+      } /* <<-- END of SINGLE GENERATION (THE "org" FOR LOOP) */
 
-  for (i = 0; i < 5; i++)
-  {
-    printf("%f\n", y[i]);
-  }
-  printf("\n \n");
-  for (i = 0; i < 5; i++)
-  {
-    printf("%f\n", optimal_phenotype[i]);
-  }
-//free(prevpop); 
-free(currpop); 
+  } /* <<-- END of ALL GENERATIONS (THE "gen" FOR LOOP) */
+
+  free(currpop);
   fclose(fit);
   fclose(flocation);
-/*  FILE *f; 
- *  f = fopen ("long-run-lin1.dat", "wb"); 
- *  fwrite (lin.generation, sizeof(population), 10000000, f); 
- *  fclose(f);  
- */ //  free (lin.generation); 
-}  
 
 
 
-	
+/*  FILE *f;
+ *  f = fopen ("long-run-lin1.dat", "wb");
+ *  fwrite (lin.generation, sizeof(population), 10000000, f);
+ *  fclose(f);
+ */ //  free (lin.generation);
+
+
+}
